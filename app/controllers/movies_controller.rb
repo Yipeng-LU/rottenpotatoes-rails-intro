@@ -11,8 +11,30 @@ class MoviesController < ApplicationController
   end
 
   def index
-    #@movies = Movie.all
-    @movies = Movie.all.order("title asc")
+    @all_ratings = ['G', 'PG', 'PG-13', 'R']
+    @ratings=['G', 'PG', 'PG-13', 'R']
+    session[:ratings] = params[:ratings] if params[:ratings]
+    session[:sort]    = params[:sort]    if params[:sort]
+    temp=Movie.all
+    if session[:sort]
+      case session[:sort]
+      when 'title'
+        @title_hilite = 'hilite'
+        temp=temp.order('title asc')
+      when 'release_date'
+        @release_hilite = 'hilite'
+        temp=temp.order('release_date desc')
+      end
+    end
+    if session[:ratings]
+      @ratings=session[:ratings].keys
+      temp = temp.where('rating IN (?)', @ratings)
+    end
+    @movies =temp
+    if not params[:ratings] or not params[:sort]
+      flash.keep
+      redirect_to movies_path(ratings: session[:ratings], sort: session[:sort])
+    end
   end
 
   def new
